@@ -28,6 +28,7 @@ $socialPlugin = new SocialPlugin();
  */ 
 add_action('init',			array($socialPlugin,"init"));	//Init - starts session and output buffer
 add_action("wp_head",		array($socialPlugin,"head"));	//Head - does everything we need in the page
+add_action("wp_footer",		array($socialPlugin,"foot"));	//Head - does everything we need in the page
 //add_action('widgets_init', 	create_function('', 'return register_widget("SocialWidget");'));
 add_filter('the_content', 	'filter_the_content' );
 
