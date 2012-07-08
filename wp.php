@@ -15,13 +15,13 @@ License: GPLv3
 /*
  * 		Import all the social core files
  */
-require_once("socialplugin.php");
-
-//require_once("core/socialwidget.php");  
-
-//require_once("filters/the_content.php");  
+require_once("class_socialplugin.php");
+require_once("class_socialwidget.php");  
+require_once("filter_content.php");  
 
 $socialPlugin = new SocialPlugin(); 
+
+
 
 /*
  * 		Add all the wordpress hooks
