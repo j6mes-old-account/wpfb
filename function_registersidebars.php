@@ -12,4 +12,5 @@ function registerSidebars()
 		'after_widget' => "</div>\n"
 		));
 		
+		
 }
