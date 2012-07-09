@@ -1,11 +1,11 @@
 <?php
 
 /*
-Plugin Name: WordPress <3 Facebook
+Plugin Name: Facebook Social Reading PLugin for Wordpress
 Plugin URI: http://lolblog.net/
-Description: A plugin that shares user's reads on facebook
-Version: 1.0
-Author: James
+Description: A plugin that shares user's reads on facebook. PLEASE ENSURE THAT YOU HAVE ALTERED THE SETTINGS IN class_socialplugin.php BEFORE USING
+Version: 0.0.1
+Author: James Thorne
 Author URI: http://lolblog.net
 License: GPLv3
 */
@@ -24,19 +24,13 @@ $socialPlugin = new SocialPlugin();
 
 
 
+
 /*
  * 		Add all the wordpress hooks
  */ 
 add_action('init',			array($socialPlugin,"init"));	//Init - starts session and output buffer
 add_action("wp_head",		array($socialPlugin,"head"));	//Head - does everything we need in the page
-add_action('widgets_init', 'registerSidebars');
+add_action('widgets_init', 	'registerSidebars');
 add_action('widgets_init', 	create_function('', 'return register_widget("SocialWidget");'));
 add_filter('the_content', 	'filter_the_content' );
-
-
-
-
-
-
-
 

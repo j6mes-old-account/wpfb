@@ -26,28 +26,46 @@ class SocialWidget extends WP_Widget {
 		try
 		{
 			$user = $socialPlugin->getUser();
-			//<a href="{$socialPlugin->getLogoutUrl()}">Log Out</a>
 			echo <<<EOT
-			<div class="wpfbwidget">
-				<div><img src="http://graph.facebook.com/{$user['id']}/picture" /></div><div class="wpfbwidgetcontent">Logged in as {$user['name']}<br />Sharing is Enabled. </div>
+			<div id='wpfbwidget' class="wpfbwidget">
+				<div><img src="http://graph.facebook.com/{$user['id']}/picture" /></div><div class="wpfbwidgetcontent">Logged in as {$user['name']}<br />Sharing is <a id='wpfbmenu' onclick='wpfbMenu();' href='javascript:void()'>Enabled</a>. </div>
+				<div id='wpfbwidgetmenu'>
+				<ul>
+					<li><a href="http://developers.facebook.com/docs/opengraph/">What is sharing?</a></li>
+					<li><a href="{$socialPlugin->getLogoutUrl()}" target="_blank">Log Out</a></li>
+				</ul></div>
 			</div>
 			<style>
 			.wpfbwidget {padding:5px; background-color:#eee; padding-top:13px; border-radius:5px; width:340px; padding-left:14px; overflow:hidden; }
 			.wpfbwidget>div {display: table-cell; border-collapse: collapse; vertical-align: middle; }
 			.wpfbwidget>div.wpfbwidgetcontent {padding-left:10px;}
-			</style>		
+			#wpfbwidgetmenu {display:none}
+			</style>
+			<script>
+			function wpfbMenu(e)
+			{
+				wpfbwidget = document.getElementById('wpfbwidgetmenu');
+				if(wpfbwidget.style.display == 'block')
+				{
+					wpfbwidget.style.display = 'none';
+				}
+				else
+				{
+					wpfbwidget.style.display = 'block';
+				}
+				
+			}
+			</script>		
 EOT;
 
 			
 		}
 		catch (exception $e) 
 		{
-			echo "<a href=\"{$socialPlugin->getLoginUrl()}\"><img src=\"http://coffeetalker.com/minimax/templates/coffeetalker/images/button-sign-in-with-facebook.png\"></a>"; 
+			$plurl = plugins_url();
+			echo "<a href=\"{$socialPlugin->getLoginUrl()}\"><img src=\"$plurl/wpfb/img_button.png\"></a>"; 
 		}
-			extract( $args );
-			$title = apply_filters( 'widget_title', $instance['title'] );
-	
-			echo "<div id='xcContainer'></div>";
+			
 		
 		
 	}

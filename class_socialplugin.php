@@ -4,12 +4,15 @@
  * 
  */
 class SocialPlugin 
-{	
+{
+		
 	function __construct() 
 	{
-		$this->fb =array(	"client" => "384766668212170",
-					  		"secret" => "464c58240fae3d9439238af6d8bdea25"	
+		$this->fb =array(	"client" => "",
+					  		"secret" => ""	
 		);				
+		
+		
 	}
 	
 	/**
@@ -22,6 +25,8 @@ class SocialPlugin
 	{
 		ob_start();
 		session_start();
+		
+
 	}
 	
 	/**
@@ -31,7 +36,7 @@ class SocialPlugin
 	 * @author james@thorne.bz 
 	 */ 
 	function head()
-	{		
+	{
 		/*
 		 * Check if page is a single, if yes, then do our stuff
 		 */
@@ -111,7 +116,7 @@ class SocialPlugin
 	{
 		if(is_single())
 		{
-			require_once("facebook.php");
+			require_once("class_facebook.php");
 			$facebook = new Facebook(array(
 	 			'appId'  => $this->fb['client'],
 	  			'secret' => $this->fb['secret']
@@ -234,7 +239,7 @@ class SocialPlugin
 		/*
 		 * Set an image for it.
 		 */
-		$img = "http://blog.eukhost.com/wp-content/uploads/2012/06/wordpress_logo.png";		//default
+		$img = plugins_url()."/wpfb/img_wordpress.png"; //default
 		
 		/*
 		 * And override it if we have a featured image
@@ -304,6 +309,11 @@ class SocialPlugin
 								wpfbBox = document.getElementById('wpfbBox');
 								FB.XFBML.parse(wpfbBox);	
 							}
+						});
+						
+						FB.Event.subscribe("auth.login", function(r)
+						{
+							location.reload();
 						});
 					};
 							
