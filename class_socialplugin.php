@@ -140,7 +140,6 @@ class SocialPlugin
 					/*
 					 * XXX: TODO: Gracefully handle? or Ignore, its up to you
 					 */
-					 
 				}
 				
 				
