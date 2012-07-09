@@ -9,10 +9,7 @@ class SocialPlugin
 	{
 		$this->fb =array(	"client" => "384766668212170",
 					  		"secret" => "464c58240fae3d9439238af6d8bdea25"	
-		);
-		
-		
-					
+		);				
 	}
 	
 	/**
@@ -41,28 +38,6 @@ class SocialPlugin
 		if(is_single())
 		{
 			
-			/*
-			 * If we've just come from facebook, check for an authenticated referal
-			 */
-			if(strpos($_SERVER['HTTP_REFERER'],"http://www.facebook.com")!==false)
-			{
-				if(isset($_GET['code']) and @strlen($_GET['code']))
-				{
-					/*
-					 * Set Session  = the code
-					 */
-					$_SESSION['code'] = $_GET['code'];	
-				}
-				else
-				{
-					/*
-					 * Go to a canvas page for log in
-					 */	
-					header("Location:http://xc.io");	 
-				}
-				
-				die;
-			}
 			
 		
 			$this->echoHeaders();
@@ -85,7 +60,7 @@ class SocialPlugin
 	 * @return void
 	 * @author james@thorne.bz 
 	 */ 
-	function postFb()
+	function postFb($try = false)
 	{
 		if(is_single())
 		{
@@ -95,13 +70,16 @@ class SocialPlugin
 	  			'secret' => $this->fb['secret']
 			));
 			
-			$facebook->setAccessToken($_SESSION['code']);
+
 			
-			if(strpos($_SERVER['HTTP_USER_AGENT'],"facebook")===false)
+
+			if($facebook->getUser()>0)
 			{
 				try
 				{
+					$user = $facebook->api("/me",'get',array("access_token"=>$facebook->getAccessToken()));
 					$facebook->api("/me/news.reads?article={$this->pageUrl()}",'post',array("access_token"=>$facebook->getAccessToken()));
+				
 				}
 				catch (FacebookApiException $e)
 				{
@@ -109,6 +87,59 @@ class SocialPlugin
 					 * XXX: TODO: Gracefully handle? or Ignore, its up to you
 					 */
 				}
+				
+				$this->user = $user;	
+				
+			}
+			else
+			{
+				/*
+				 * If we've just come from facebook, check for an authenticated referal
+				 */
+				if(strpos($_SERVER['HTTP_REFERER'],"http://www.facebook.com")!==false)
+				{
+					if(isset($_GET['code']) and @strlen($_GET['code']))
+					{
+						/*
+						 * If we have a code then we need to force update the access token
+						 */
+						if(isset($_GET['code']))
+						{
+							$token_url = "https://graph.facebook.com/oauth/access_token?"
+							. "client_id=" .$this->fb['client']. "&redirect_uri=" . urlencode($this->pageUrl())
+							. "&client_secret=" . $this->fb['secret'] . "&code=" . $_GET['code'];
+							
+							$response = @file_get_contents($token_url);
+							
+							if(strlen($response))
+							{
+						
+								$eq = explode("&",$response);
+								$eq = explode("=",$eq[0]);
+								$facebook->setAccessToken($eq[1]);
+								unset($_SESSION['code']);
+							}
+						}
+						if(!$try)
+						{
+							$this->postFb(true);
+						}
+					}
+					else
+					{
+						/*
+						 * Go to a canvas page for log in
+						 */	
+						header("Location:http://www.facebook.com/dialog/oauth/?
+					    client_id={$this->fb['client']}
+					    &redirect_uri=". urlencode($this->pageUrl()) ."
+					    &scope=publish_actions");
+						die;	 
+					}
+					
+					
+				}
+					
 			}
 			
 		}
@@ -208,7 +239,22 @@ class SocialPlugin
 							appId      : '{$this->fb['client']}', // App ID
 					  		status     : true, // check login status
 						  	cookie     : true, // enable cookies to allow the server to access the session
-						  	xfbml      : true  // parse XFBML
+						  	xfbml      : false // parse XFBML
+						});
+						
+						FB.getLoginStatus(function(response) {
+							/*
+							 * 	If we're connected then hide the login box
+							 */
+							if(response.status == "connected")
+							{
+								hideAll("wpfbBox");
+							}
+							else
+							{
+								wpfbBox = document.getElementById('wpfbBox');
+								FB.XFBML.parse(wpfbBox);	
+							}
 						});
 					};
 							
@@ -222,6 +268,50 @@ class SocialPlugin
 				
 			}
 			
+			function hideAll(className) 
+			{
+				els= getElementsByClassName(document, className),
+       			cnt = els.length;
+   				for (var i = 0; i < cnt; i++) 
+   				{
+     				var e = els[i];
+					e.style.display = 'none';
+				}
+  
+			}
+			
+			function getElementsByClassName(node,classname) 
+			{
+				//Dustin Diaz method
+  				if (node.getElementsByClassName) 
+  				{ 
+    				return node.getElementsByClassName(classname);
+				}
+  				else 
+  				{
+    				return (function getElementsByClass(searchClass,node) 
+    				{
+        				if ( node == null )
+						{
+          					node = document;
+						}
+        				var classElements = [],
+            			els = node.getElementsByTagName("*"),
+            			elsLen = els.length,
+            			pattern = new RegExp("(^|\\s)"+searchClass+"(\\s|$)"), i, j;
+
+				        for (i = 0, j = 0; i < elsLen; i++) 
+				        {
+          					if ( pattern.test(els[i].className) ) 
+          					{
+              					classElements[j] = els[i];
+              					j++;
+          					}
+        				}
+        				return classElements;
+    				})(classname, node);
+				}
+			}
 			//]]>
 			
 		</script>
