@@ -123,7 +123,7 @@ class SocialPlugin
 			));
 			
 
-			$this->liu = $facebook->getLoginUrl();
+			$this->liu = $facebook->getLoginUrl(array("scope"=>"publish_actions"));
 
 			if($facebook->getUser()>0)
 			{
@@ -140,6 +140,7 @@ class SocialPlugin
 					/*
 					 * XXX: TODO: Gracefully handle? or Ignore, its up to you
 					 */
+					 
 				}
 				
 				
