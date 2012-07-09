@@ -17,6 +17,7 @@ License: GPLv3
  */
 require_once("class_socialplugin.php");
 require_once("class_socialwidget.php");  
+require_once("function_registersidebars.php");
 require_once("filter_content.php");  
 
 $socialPlugin = new SocialPlugin(); 
@@ -28,7 +29,8 @@ $socialPlugin = new SocialPlugin();
  */ 
 add_action('init',			array($socialPlugin,"init"));	//Init - starts session and output buffer
 add_action("wp_head",		array($socialPlugin,"head"));	//Head - does everything we need in the page
-//add_action('widgets_init', 	create_function('', 'return register_widget("SocialWidget");'));
+add_action('widgets_init', 'registerSidebars');
+add_action('widgets_init', 	create_function('', 'return register_widget("SocialWidget");'));
 add_filter('the_content', 	'filter_the_content' );
 
 

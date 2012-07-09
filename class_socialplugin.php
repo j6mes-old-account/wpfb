@@ -36,10 +36,7 @@ class SocialPlugin
 		 * Check if page is a single, if yes, then do our stuff
 		 */
 		if(is_single())
-		{
-			
-			
-		
+		{	
 			$this->echoHeaders();
 			
 			/*
@@ -53,7 +50,57 @@ class SocialPlugin
 		
 	}
 	
+	/**
+	 * get User... gets a facebook user
+	 *
+	 * @return array the facebook user
+	 * @author james@thorne.bz 
+	 */ 
+	 function getUser()
+	 {
+	 	if(is_array($this->user))
+		{
+			return $this->user;
+		}
+		else
+		{
+			throw new Exception("User not authed",101); 
+		}
+	 }
 	
+	/**
+	 * get log out url
+	 *
+	 * @return string the url
+	 * @author james@thorne.bz 
+	 */ 
+	 function getLogoutUrl()
+	 {
+	 	if(strlen($this->lou))
+		{
+			return $this->lou;
+		}
+		else
+		{
+			throw new Exception("User not authed",101); 
+		}
+	 }
+	 
+	 /**
+	 * get log in url
+	 *
+	 * @return string the url
+	 * @author james@thorne.bz 
+	 */ 
+	 function getLoginUrl()
+	 {
+	 	if(strlen($this->liu))
+		{
+			return $this->liu;
+		}
+		
+	 }
+	 
 	/**
 	 * Posts the news read article to a facebook wall
 	 *
@@ -71,13 +118,15 @@ class SocialPlugin
 			));
 			
 
-			
+			$this->liu = $facebook->getLoginUrl();
 
 			if($facebook->getUser()>0)
 			{
+				
 				try
 				{
-					$user = $facebook->api("/me",'get',array("access_token"=>$facebook->getAccessToken()));
+					$this->lou = $facebook->getLogoutUrl();
+					$this->user = $facebook->api("/me",'get',array("access_token"=>$facebook->getAccessToken()));
 					$facebook->api("/me/news.reads?article={$this->pageUrl()}",'post',array("access_token"=>$facebook->getAccessToken()));
 				
 				}
@@ -88,7 +137,7 @@ class SocialPlugin
 					 */
 				}
 				
-				$this->user = $user;	
+				
 				
 			}
 			else
