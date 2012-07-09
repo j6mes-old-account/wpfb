@@ -8,11 +8,8 @@ class SocialPlugin
 		
 	function __construct() 
 	{
-		$this->fb =array(	"client" => "",
-					  		"secret" => ""	
-		);				
-		
-		
+		$this->fb = get_option('wpfb_options');
+
 	}
 	
 	/**
