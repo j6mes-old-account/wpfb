@@ -1,4 +1,4 @@
-=== Facebook/Wordpress Social Reader ===
+=== Facebook Wordpress Social Reader ===
 Contributors: partydroid
 Donate link: http://lolblog.net/
 Tags: facebook, social
