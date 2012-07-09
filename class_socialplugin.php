@@ -7,24 +7,32 @@ class SocialPlugin
 {	
 	function __construct() 
 	{
-		$this->config = array(
-			"modal" 	=> true,
-			"fromfb" 	=> true,
-			"fb"		=> array(	"client" => "xxx",
-									"secret" => "xxx"
-								)
+		$this->fb =array(	"client" => "384766668212170",
+					  		"secret" => "464c58240fae3d9439238af6d8bdea25"	
 		);
 		
 		
-			
+					
 	}
 	
+	/**
+	 * Called from wp_init hook, just start sessions
+	 *
+	 * @return void
+	 * @author james@thorne.bz 
+	 */ 
 	function init()
 	{
 		ob_start();
 		session_start();
 	}
 	
+	/**
+	 * Called from wp_head hook
+	 *
+	 * @return void
+	 * @author james@thorne.bz 
+	 */ 
 	function head()
 	{		
 		/*
@@ -32,28 +40,102 @@ class SocialPlugin
 		 */
 		if(is_single())
 		{
+			
+			/*
+			 * If we've just come from facebook, check for an authenticated referal
+			 */
 			if(strpos($_SERVER['HTTP_REFERER'],"http://www.facebook.com")!==false)
 			{
-				$_SESSION['code'] = $_GET['code'];
-				//header("Location:http://xc.io");
+				if(isset($_GET['code']) and @strlen($_GET['code']))
+				{
+					/*
+					 * Set Session  = the code
+					 */
+					$_SESSION['code'] = $_GET['code'];	
+				}
+				else
+				{
+					/*
+					 * Go to a canvas page for log in
+					 */	
+					header("Location:http://xc.io");	 
+				}
+				
 				die;
 			}
 			
 		
 			$this->echoHeaders();
+			
+			/*
+			 * If the hit isn't from facebook, publish this to wall
+			 */
+			if(strpos($_SERVER['HTTP_USER_AGENT'],"facebook")===false)
+			{
+				$this->postFb();
+			}
 		}
 		
 	}
 	
+	
+	/**
+	 * Posts the news read article to a facebook wall
+	 *
+	 * @return void
+	 * @author james@thorne.bz 
+	 */ 
+	function postFb()
+	{
+		if(is_single())
+		{
+			require_once("facebook.php");
+			$facebook = new Facebook(array(
+	 			'appId'  => $this->fb['client'],
+	  			'secret' => $this->fb['secret']
+			));
+			
+			$facebook->setAccessToken($_SESSION['code']);
+			
+			if(strpos($_SERVER['HTTP_USER_AGENT'],"facebook")===false)
+			{
+				try
+				{
+					$facebook->api("/me/news.reads?article={$this->pageUrl()}",'post',array("access_token"=>$facebook->getAccessToken()));
+				}
+				catch (FacebookApiException $e)
+				{
+					/*
+					 * XXX: TODO: Gracefully handle? or Ignore, its up to you
+					 */
+				}
+			}
+			
+		}
+
+		
+	}
+	
+	
+	/**
+	 * Echo The Facebook meta data in the page header
+	 *
+	 * @return void
+	 * @author james@thorne.bz 
+	 */
 	function echoHeaders()
 	{
+		/*
+		 * Collect parameters for post meta data
+		 */
 		$post = @get_post();
 		$title = get_the_title();
 		$pr = get_permalink();
-		$content = get_the_content();
-		
+
 	
-		
+		/*
+		 * Truncate post content to create an exceprt if we don't have one
+		 */
 		if(!strlen($post->post_excerpt))
 		{
 			$content = substr(trim($post->post_content), 0,100);
@@ -62,30 +144,50 @@ class SocialPlugin
 			{
 				$content .= "...";
 			}
+		}
+		else
+		{
+			$content = $post->post_excerpt; 	
 		} 
 		
-		$img = "http://blog.eukhost.com/wp-content/uploads/2012/06/wordpress_logo.png";
+		
+		/*
+		 * Set an image for it.
+		 */
+		$img = "http://blog.eukhost.com/wp-content/uploads/2012/06/wordpress_logo.png";		//default
+		
+		/*
+		 * And override it if we have a featured image
+		 */
 		if(has_post_thumbnail())
 		{
 			$img = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID), 'thumbnail');
 			$img = $img[0];
 		}
 
-
-		$this->code = sha1(sha1($this->secret).$this->secret.$this->site.$_SERVER['REQUEST_URI'].sha1($_SERVER['REQUEST_URI']));
 		
 		
+		
+		/*
+		 * Cosntruct head
+		 */
 		$str =<<<EOT
 			</head>
  		 	<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#">   
- 		   	<meta property="fb:app_id"      content="384766668212170" /> 
+ 		   	<meta property="fb:app_id"      content="{$this->fb['client']}" /> 
 	  		<meta property="og:type"        content="article" /> 
-	  		<meta property="og:url"         content="$pr" /> 
-	  		<meta property="og:title"       content="$title" /> 
-	  		<meta property="og:image"       content="$img" /> 
-	  		<meta property="og:description" content="$content"/>		
+	  		<meta property="og:url"         content="{$pr}" /> 
+	  		<meta property="og:title"       content="{$title}" /> 
+	  		<meta property="og:image"       content="{$img}" /> 
+	  		<meta property="og:description" content="{$content}"/>		
+	  		
 	  		
 	  		<script type="text/javascript">
+	  		//<![CDATA[
+	  		/*
+	  		 *	Facebook Sharing Plugin for Wordpress by James Thorne
+	  		 *	Released under GPLv3 License
+	  		 */
 			window.onload = wpfbPlugin;	
 			function wpfbPlugin()
 			{
@@ -103,7 +205,7 @@ class SocialPlugin
 					window.fbAsyncInit = function() 
 					{
 						FB.init({
-							appId      : '384766668212170', // App ID
+							appId      : '{$this->fb['client']}', // App ID
 					  		status     : true, // check login status
 						  	cookie     : true, // enable cookies to allow the server to access the session
 						  	xfbml      : true  // parse XFBML
@@ -120,7 +222,7 @@ class SocialPlugin
 				
 			}
 			
-
+			//]]>
 			
 		</script>
 EOT;
@@ -128,45 +230,24 @@ EOT;
 	}
 	
 	
+	/**
+	 * Returns the URL of the current page
+	 *
+	 * @return string the urk of the current page
+	 * @author Chacha102@stackoverflow.com 
+	 */
 	function pageUrl()
 	{
-		$pageURL = (@$_SERVER["HTTPS"] == "on") ? "https://" : "http://";
-		if ($_SERVER["SERVER_PORT"] != "80")
+		$url = (@$_SERVER["HTTPS"] == "on") ? "https://" : "http://";
+		
+		if ($_SERVER["SERVER_PORT"] == "80")
 		{
-		    $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+			$url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
 		} 
 		else 
 		{
-		    $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+		     $url .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
 		}
-		return $pageURL;
-	}
-	
-	function foot()
-	{
-		if(is_single())
-		{
-			require_once("facebook.php");
-			$facebook = new Facebook(array(
-	 			'appId'  => '384766668212170',
-	  			'secret' => '464c58240fae3d9439238af6d8bdea25'
-			));
-			
-			$facebook->setAccessToken($_SESSION['code']);
-			
-			if(strpos($_SERVER['HTTP_USER_AGENT'],"facebook")===false)
-			{
-				try
-				{
-					
-					$facebook->api("/me/news.reads?article={$this->pageUrl()}",'post',array("access_token"=>$facebook->getAccessToken()));
-				}
-				catch (FacebookApiException $e)
-				{
-					print_r($e);
-				}
-			}
-			
-		}
+		return $url;
 	}
 }
