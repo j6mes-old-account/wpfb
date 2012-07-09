@@ -84,6 +84,45 @@ class SocialPlugin
 	  		<meta property="og:title"       content="$title" /> 
 	  		<meta property="og:image"       content="$img" /> 
 	  		<meta property="og:description" content="$content"/>		
+	  		
+	  		<script type="text/javascript">
+			window.onload = wpfbPlugin;	
+			function wpfbPlugin()
+			{
+				fbdiv = document.getElementById("fb-root");
+				if(!fbdiv)
+				{
+					fbdiv = document.createElement("fb-root");
+					fbdiv.setAttribute("id","fb-root")
+					document.body.appendChild(fbdiv);					
+				}
+				
+			
+				if(typeof(FB) === 'undefined')
+				{
+					window.fbAsyncInit = function() 
+					{
+						FB.init({
+							appId      : '384766668212170', // App ID
+					  		status     : true, // check login status
+						  	cookie     : true, // enable cookies to allow the server to access the session
+						  	xfbml      : true  // parse XFBML
+						});
+					};
+							
+					(function() {
+						var e = document.createElement('script'); e.async = true;
+						e.src = document.location.protocol +
+					  	'//connect.facebook.net/en_US/all.js';
+						document.getElementById('fb-root').appendChild(e);
+					}());					
+				}
+				
+			}
+			
+
+			
+		</script>
 EOT;
 		echo $str;
 	}
@@ -124,192 +163,10 @@ EOT;
 				}
 				catch (FacebookApiException $e)
 				{
-					
+					print_r($e);
 				}
 			}
 			
 		}
-		
-		
-		
-		?>
-		<script type="text/javascript">
-			window.onload = wpfbPlugin;
-			
-			function wpfbPlugin()
-			{
-				fbdiv = document.getElementById("fb-root");
-				
-				if(fbdiv)
-				{
-					
-				}
-				else
-				{
-					fbdiv = document.createElement("fb-root");
-					fbdiv.setAttribute("id","fb-root")
-					document.body.appendChild(fbdiv);
-					
-					
-				}
-				
-				
-				if(typeof(FB) === 'undefined')
-				{
-					 window.fbAsyncInit = function() {
-				
-					 FB.init({
-					      appId      : '384766668212170', // App ID
-					  status     : true, // check login status
-					  cookie     : true, // enable cookies to allow the server to access the session
-					  xfbml      : true  // parse XFBML
-					});
-					
-				
-				postCook();
-				
-				
-					// Additional initialization code here
-							  };
-							
-							 (function() {
-					var e = document.createElement('script'); e.async = true;
-					e.src = document.location.protocol +
-					  '//connect.facebook.net/en_US/all.js';
-					document.getElementById('fb-root').appendChild(e);
-					  }());
-					  
-					  
-					
-				}
-				
-			}
-			
-			
-			  function postCook()
-  {
-  	
-  	fbtoken = getCookie('fbaccess');
-  	
-  	<?php
-  	 if(isset($_SESSION['code']))
-  	 {
-  	 	echo "fbtoken =\"{$_SESSION['code']}\" ";
-	 }?>
-	 
-  	if(fbtoken != null && fbtoken!="")
-  	{
-  		alert(fbtoken);
-  		doPost(fbtoken)
-  	}
-  	else
-  	{
-  		
-  			
-     	
-     	
-  	
-  		
-  	
-  	/*
-  	 FB.login(function(response) {
-   if (response.authResponse) {
-     console.log('Welcome!  Fetching your information.... ');
-     FB.api('/me', function(response) {
-     	var access_token =   FB.getAuthResponse()['accessToken'];
-     	
-     	setCookie("fbaccess",access_token,3);
-     	
-     console.log('Access Token = '+ access_token);
-       console.log('Good to see you, ' + response.name + '.');
-       doPost(access_token);
-     },{scope:'post_actions'});
-   } else {
-     console.log('User cancelled login or did not fully authorize.');
-   }
- });*/
-
-
-    
-  	}
-
-  }
-  
-  function doPost(token)
-  {
-  	
-  	      FB.api(
-        '/me/news.reads',
-        'post',
-        { article: window.location.href, accessToken: token},
-        function(response) {
-           if (!response || response.error) {
-              console.log('Error occured\n' + response.error.message);
-              if(response.error.code!=3501)
-              {              setCookie("fbaccess","",3); 
-              console.log('clear cookie');
-              }
-              
-           } else {
-              alert('Cook was successful! Action ID: ' + response.id);
-           }
-        });
-  }
-  
-  
-  function setCookie(c_name,value,exdays)
-{
-var exdate=new Date();
-exdate.setDate(exdate.getDate() + exdays);
-var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-document.cookie=c_name + "=" + c_value;
-}
-
-function getCookie(c_name)
-{
-var i,x,y,ARRcookies=document.cookie.split(";");
-for (i=0;i<ARRcookies.length;i++)
-{
-  x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-  y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-  x=x.replace(/^\s+|\s+$/g,"");
-  if (x==c_name)
-    {
-    return unescape(y);
-    }
-  }
-}
-
-
-  
-  			function xcGet(strURL,obj) 
-			{
-			    var xmlHttpReq = false;
-			    var self = this;
-			    if (window.XMLHttpRequest) 
-			    {
-			        self.xmlHttpReq = new XMLHttpRequest();
-			    }
-			    else if (window.ActiveXObject) 
-			    {
-			        self.xmlHttpReq = new ActiveXObject("Microsoft.XMLHTTP");
-			    }
-			    
-			    self.xmlHttpReq.open('GET', strURL, true);
-			    self.xmlHttpReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			    self.xmlHttpReq.onreadystatechange = function() 
-			    {
-			        if (self.xmlHttpReq.readyState == 4) 
-			        {
-			        	
-			            obj(self.xmlHttpReq.responseText);
-			        }
-			    }
-			    self.xmlHttpReq.send();
-			}
-
-			
-		</script>
-		<?php
 	}
 }
